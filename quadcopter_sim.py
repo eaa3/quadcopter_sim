@@ -69,12 +69,11 @@ class PIDcontroller:
     # CHANGE THIS: the current definition of the function calc_control
     # is not correct, and should be changed to calculate a PID control action
     def calc_control(self,e_now):
-        e_int = 0
-        de    = 0
+        e_int = e_now + self.e_int
+        de    = (e_now - self.e_prev)*self.inv_dT
 
         # PID control signal: Kp * e_now + Ki * e_integral + Kd * e_derivative
-        e_derivative = (e_now - self.e_prev)*self.inv_dT
-        u     = self.Kp * e_now + self.Kd*e_derivative
+        u     = self.Kp * e_now + self.Kd*de + self.Ki*e_int
 
         # update memory (state) of PIDcontroller:
         self.e_prev = e_now   # next time, now is previous

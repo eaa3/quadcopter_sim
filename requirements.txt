@@ -1,0 +1,6 @@
+decorator==4.2.1
+networkx==2.1
+numpy==1.14.0
+pybullet==1.8.3
+scipy==1.0.0
+trimesh==2.26.8

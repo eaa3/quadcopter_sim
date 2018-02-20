@@ -328,11 +328,11 @@ Ki[2] = 0
 # roll-pitch-yaw controlers (yaw is already prefilled):
 Kp[3] = 0.1
 Kp[4] = 0.1
-Kp[5] = 0.000
+Kp[5] = 0.1
 
 Kd[3] = 0.01
-Kd[4] = 0
-Kd[5] = 0.0
+Kd[4] = 0.01
+Kd[5] = 0.01
 
 Ki[3] = 0
 Ki[4] = 0

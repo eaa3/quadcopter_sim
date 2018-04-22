@@ -18,6 +18,7 @@
 from pyqtgraph.Qt import QtCore, QtGui
 import pyqtgraph as pg
 import pyqtgraph.opengl as gl
+import sys
 # import numpy for vector calculations
 import numpy as np
 # import trigonometric functions from math
@@ -71,11 +72,11 @@ class PIDcontroller:
     # CHANGE THIS: the current definition of the function calc_control
     # is not correct, and should be changed to calculate a PID control action
     def calc_control(self,e_now):
-        e_int = 0
-        de    = 0
+        e_int = e_now + self.e_int
+        de    = (e_now - self.e_prev)*self.inv_dT
 
         # PID control signal: Kp * e_now + Ki * e_integral + Kd * e_derivative
-        u     = 0
+        u     = self.Kp * e_now + self.Kd*de + self.Ki*e_int
 
         # update memory (state) of PIDcontroller:
         self.e_prev = e_now   # next time, now is previous
@@ -104,7 +105,7 @@ class quadcopter_control:
         self.yaw_ctrl   = PIDcontroller(Kp[5],Ki[5],Kd[5],Tsample_control,0,0)
 
         # position (x, y, z), and rpy (roll, pitch, yaw) reference:
-        self.ref_pos = np.zeros(3)
+        self.ref_pos = np.array([0,0,1])
         self.ref_rpy = np.zeros(3)
         # offset op roll,pitch,yaw referentie ten behoeve van tunen:
         self.ref_rpy_offset = np.zeros(3)
@@ -216,7 +217,7 @@ class quadcopter_control:
 # (no need to change this)
 def update_physics(delay,quadcopterId,quadcopter_controller):
     while quadcopter_controller.sim:
-        start = time.perf_counter();
+        start = time.clock()#time.perf_counter();
 
         # the controllers are evaluated at a slower rate, only once in the 
         # control_subsample times the controller is evaluated
@@ -241,13 +242,13 @@ def update_physics(delay,quadcopterId,quadcopter_controller):
         p.stepSimulation()
 
         # delay than repeat
-        calc_time = time.perf_counter()-start
+        calc_time = time.clock() - start#time.perf_counter()-start
         if ( calc_time > 1.2*delay ):
             #print("Time to update physics is {} and is more than 20% of the desired update time ({}).".format(calc_time,delay))
             pass
         else:
             # print("calc_time = ",calc_time)
-            while (time.perf_counter()-start < delay):
+            while (time.clock()-start < delay):#(time.perf_counter()-start < delay):
                 time.sleep(delay/10)
 
 # this function is to update the window (no need to change this)
@@ -267,8 +268,8 @@ def update_window():
 
 # Definition of update times (in sec.) for quadcopter physics, controller and 
 # window refreshing
-Tsample_physics    = 0.0001
-control_subsample  = 50
+Tsample_physics    = 0.01#0.0001
+control_subsample  = 1
 Tsample_control    = control_subsample * Tsample_physics
 Tsample_window     = 0.02
 
@@ -282,6 +283,7 @@ Izz              = 0.004
 
 # creation of pyqtgraph 3D graphics window
 # with a ground plane and coordinate frame (global axis)
+app = QtGui.QApplication(sys.argv)
 window = gl.GLViewWidget()
 window.show()
 window.setWindowTitle('Bullet Physics example')
@@ -309,6 +311,10 @@ for i in range(int(2/Tsample_physics)):
 # create a pyqtgraph mesh from the quadcopter to visualize
 # the quadcopter in the 3D pyqtgraph window
 quadcopterMesh = bullet2pyqtgraph(quadcopterId)[0]
+quadcopterMesh.parseMeshData()
+# print quadcopterMesh.vertexes
+# print quadcopterMesh.faces
+# print quadcopterMesh.normals
 window.addItem(quadcopterMesh)
 window.update()
 
@@ -319,26 +325,26 @@ Kd = np.zeros(6)
 
 # give them values:
 # x-y-z controlers:
-Kp[0] = 0
-Kp[1] = 0
-Kp[2] = 0
+Kp[0] = 0.01
+Kp[1] = 0.01
+Kp[2] = 0.04
 
-Kd[0] = 0
-Kd[1] = 0
-Kd[2] = 0
+Kd[0] = 0.001
+Kd[1] = 0.001
+Kd[2] = 0.025
 
 Ki[0] = 0
 Ki[1] = 0
 Ki[2] = 0
 
 # roll-pitch-yaw controlers (yaw is already prefilled):
-Kp[3] = 0
-Kp[4] = 0
-Kp[5] = 25.6
+Kp[3] = 0.1
+Kp[4] = 0.1
+Kp[5] = 0.1
 
-Kd[3] = 0
-Kd[4] = 0
-Kd[5] = 1.28
+Kd[3] = 0.01
+Kd[4] = 0.01
+Kd[5] = 0.01
 
 Ki[3] = 0
 Ki[4] = 0
